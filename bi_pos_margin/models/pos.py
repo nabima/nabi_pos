@@ -6,7 +6,7 @@ import odoo.addons.decimal_precision as dp
 
 class PosOrder(models.Model):
     _inherit ='pos.order'
-    margin = fields.Float(compute='_product_margin',digits=dp.get_precision('Product Price'), string="Margin")
+    margin = fields.Float(compute='_product_margin',digits=dp.get_precision('Product Price'), string="Margin", store=True)
 
     @api.depends('lines.margin')
     def _product_margin(self):
@@ -16,13 +16,14 @@ class PosOrder(models.Model):
 class PosOrderLine(models.Model):
     _inherit ='pos.order.line'   
         
-    purchase_price = fields.Float(string='Cost', digits=dp.get_precision('Product Price'))
+    purchase_price = fields.Float(string='Cost', compute=product_id_change_margin, digits=dp.get_precision('Product Price'),store=True)
     margin = fields.Float(compute='_product_margin', digits=dp.get_precision('Product Price'), store=True)
 
-    @api.onchange('product_id')
+    
+	@api.depends('product_id')
     def product_id_change_margin(self):
         self.purchase_price = self.product_id.standard_price
-        return
+        
 
     @api.depends('product_id', 'purchase_price', 'price_unit')
     def _product_margin(self):
